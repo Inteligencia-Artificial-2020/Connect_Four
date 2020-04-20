@@ -14,7 +14,7 @@ from util import INFINITY
 #      1. MM jugara mejor que AB.
 #      2. AB jugara mejor que  MM.
 #      3. Ambos jugaran al mismo nivel de destreza.
-ANSWER1 = 0
+ANSWER1 = 3
 
 # 1.2. Dos jugadores computarizados juegan un juego con un limite de tiempo. El jugador MM
 # hace busqueda minimax con profundidad iterativa, y el jugador AB hace busqueda alpha-beta
@@ -24,7 +24,7 @@ ANSWER1 = 0
 #      1. MM jugara mejor que AB.
 #      2. AB jugara mejor que  MM.
 #      3. Ambos jugaran al mismo nivel de destreza.
-ANSWER2 = 0
+ANSWER2 = 2
 
 ### 2. Connect Four
 from connectfour import *
@@ -49,15 +49,26 @@ import tree_searcher
 ## Cambie la siguiente funcion de evaluacion tal que trata de ganar lo mas rapido posible,
 ## o perder lentamente, cuando decide que un jugador esta destina a ganar.
 ## No tiene que cambiar como evalua posiciones que no son ganadoras.
-
+####################################################################################################
 def focused_evaluate(board):
     """
     Dado un tablero, returna un valor numerico indicando que tan bueno
     es el tablero para el jugador de turno.
     Un valor de retorno >= 1000 significa que el jugador actual ha ganado;
     Un valor de retorno <= -1000 significa que el jugador actual perdio
-    """    
-    raise NotImplementedError
+    """
+    main_player = board.get_current_player_id()
+    enemy = board.get_other_player_id()
+    score = 0
+    #Si gana el enemigo, el juego se da por perdido
+    if board.is_win() == enemy:
+        return -100000
+    # Primero calculo nuestra cadena mas larga.
+    score = board.longest_chain(main_player) * 10
+    score+= sum([2**(len(chain)-1) for chain in board.chain_cells(main_player)])
+    # Le resto al score los exitos del enemigo con sus cadenas.
+    score-= sum([2**(len(chain)-1) for chain in board.chain_cells(enemy)])
+    return score
 
 
 ## Crea una funcion "jugador" que utiliza la funcion focused_evaluate function
@@ -65,7 +76,7 @@ quick_to_win_player = lambda board: minimax(board, depth=4,
                                             eval_fn=focused_evaluate)
 
 ## Puede probar su nueva funcion de evaluacion descomentando la siguiente linea:
-#run_game(basic_player, quick_to_win_player)
+# run_game(basic_player, quick_to_win_player)
 
 ## Escriba un procedimiento de busqueda alpha-beta-search que actua como el procedimiento minimax-search
 ## pero que utiliza poda alpha-beta para evitar buscar por malas ideas
@@ -82,7 +93,28 @@ def alpha_beta_search(board, depth,
                       # para connect_four.
                       get_next_moves_fn=get_all_next_moves,
 		      is_terminal_fn=is_terminal):
-    raise NotImplementedError
+    # Se retorna la mejor opcion de columna
+    # Alpha limite inferior
+    # Beta limite superior
+    best_val = None
+    for move, new_board in get_next_moves_fn(board):
+        score = -1 * calculate_alpha_beta(new_board, depth-1, eval_fn, NEG_INFINITY, INFINITY, get_next_moves_fn, is_terminal_fn)
+        if best_val == None or score > best_val[0]:
+            best_val = (score, move, new_board)
+    return best_val[1]
+
+def calculate_alpha_beta(board, depth, eval_fn, alpha, beta, get_next_moves_fn=get_all_next_moves, is_terminal_fn=is_terminal):
+    """
+    Calcular el alpha, tomando el beta como el infinito positivo
+    Retorna el valor minimax de un tablero particular dado una profundidad con la cual estimar.
+    """
+    if is_terminal_fn(depth, board):
+        return eval_fn(board)
+    for move, new_board in get_next_moves_fn(board):
+        alpha = max(alpha, -calculate_alpha_beta(new_board, depth-1, eval_fn, -beta, -alpha, get_next_moves_fn, is_terminal_fn))
+        if alpha >= beta:
+            return alpha
+    return alpha
 
 ## Ahora deberia ser capaz de buscar al doble de profundidad en la misma cantidad de tiempo.
 ## (Claro que este jugador alpha-beta-player no funcionara hasta que haya definido
@@ -172,9 +204,9 @@ def run_test_tree_search(search, board, depth):
 COMPETE = (None)
 
 ## The standard survey questions.
-HOW_MANY_HOURS_THIS_PSET_TOOK = ""
-WHAT_I_FOUND_INTERESTING = ""
+HOW_MANY_HOURS_THIS_PSET_TOOK = "14"
+WHAT_I_FOUND_INTERESTING = "Calculate alpha and beta for best available position."
 WHAT_I_FOUND_BORING = ""
-NAME = ""
-EMAIL = ""
+NAME = "Kathy Brenes"
+EMAIL = "kathy.20@hotmail.es"
 
