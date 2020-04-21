@@ -1,6 +1,7 @@
-# IC 6200 1er Semestre 2016
-# Nombre: <Su Nombre>
-# Correo: <Su Correo>
+# Instituto Tecnologico de Costa Rica
+# Maestria en Ciencias de la computacion
+# I Semestre 2020
+# Nombre: Kathy Brenes.
 
 from util import INFINITY
 
@@ -111,6 +112,7 @@ def calculate_alpha_beta(board, depth, eval_fn, alpha, beta, get_next_moves_fn=g
     if is_terminal_fn(depth, board):
         return eval_fn(board)
     for move, new_board in get_next_moves_fn(board):
+        # calculo del negmax
         alpha = max(alpha, -calculate_alpha_beta(new_board, depth-1, eval_fn, -beta, -alpha, get_next_moves_fn, is_terminal_fn))
         if alpha >= beta:
             return alpha
@@ -137,13 +139,45 @@ ab_iterative_player = lambda board: \
 ## same depth.
 
 def better_evaluate(board):
-    raise NotImplementedError
+    def best_move(direction, board, row, column, player):
+        score = 0
+        for chain in range(3):
+            # Horizontal
+            if direction == 0 and board.get_cell(row, column+chain) == player:
+                score += 2
+            # Vertical
+            elif direction == 1 and board.get_cell(row+chain, column) == player:
+                score += 2
+            # Diagonal
+            elif direction == 2 and board.get_cell(row+chain, column+chain) == player:
+                score += 2
+        return score
+    
+    main_player = board.get_current_player_id()
+    enemy = board.get_other_player_id()
+    score = 0
+    #Si gana el enemigo, el juego se da por perdido
+    if board.is_win() == enemy:
+        return -100000    
+   
+    if board.longest_chain(main_player) == 4:
+        score = 2000 - board.num_tokens_on_board()
+    elif board.longest_chain(enemy) == 4:
+        score = -2000 + board.num_tokens_on_board()
+    else:
+        for row in range(3):
+            for column in range(4):
+                # Mi movimiento
+                score += max([best_move(chain_main_player, board, row, column, main_player) for chain_main_player in range(3)])**2
+                # El del enemigo
+                score -= max([best_move(chain_enemy, board, row, column, enemy) for chain_enemy in range(3)])**2
+    return score
 
 # Comente esta linea una vez que ha implementado completamente better_evaluate
-better_evaluate = memoize(basic_evaluate)
+# better_evaluate = memoize(basic_evaluate)
 
 # Descomente esta linea para hacer que su better_evaluate corra mas rapido.
-# better_evaluate = memoize(better_evaluate)
+better_evaluate = memoize(better_evaluate)
 
 # Para el debugging: Cambie este if-guard a True, para hacer unit-test
 # de su funcion better_evaluate.
@@ -201,12 +235,12 @@ def run_test_tree_search(search, board, depth):
 ## Quiere utilizar su codigo en un torneo con otros estudiantes? Vea 
 ## la descripcion en el enunciado de la tarea. El torneo es opcional
 ## y no tiene efecto en su nota
-COMPETE = (None)
+COMPETE = (True)
 
 ## The standard survey questions.
 HOW_MANY_HOURS_THIS_PSET_TOOK = "14"
 WHAT_I_FOUND_INTERESTING = "Calculate alpha and beta for best available position."
-WHAT_I_FOUND_BORING = ""
+WHAT_I_FOUND_BORING = "Nothing."
 NAME = "Kathy Brenes"
 EMAIL = "kathy.20@hotmail.es"
 
